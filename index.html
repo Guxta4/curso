@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Curso de Programação</title>
+    <title>Video Access Platform</title>
     <style>
         body {
             margin: 0;
@@ -77,21 +77,22 @@
     </div>
 
     <div id="video-section" class="video-container">
-        <h1>Seja-Bem-Vindo! Ao curso de programação, <span id="user-name"></span>!</h1>
+        <h1>Welcome, <span id="user-name"></span>!</h1>
         <video id="video-player" controls width="640" height="360">
             <source id="video-source" type="video/mp4">
             Your browser does not support the video tag.
         </video>
-        <button id="next-video-btn" onclick="nextVideo()">Proximo Video.</button>
+        <button id="next-video-btn" onclick="nextVideo()">Watch Next Video</button>
         <div id="message" class="message"></div>
     </div>
 </div>
+
 <script>
     const videos = [
         "modulo 1.mp4", "modulo 2.mp4", "Modulo 3.mp4", "Modulo 4.mp4", "Modulo 5.mp4",
         "Modulo 6.mp4", "Modulo 7.mp4", "Modulo 8.mp4", "Modulo 9.mp4", "Modulo 10.mp4"
     ];
-    let currentIndex = 0; // Sempre começar no primeiro vídeo
+    let currentIndex = 0;
     const lockKey = "videoAccessTime";
 
     function login() {
@@ -101,7 +102,7 @@
             document.getElementById("login-form").style.display = "none";
             document.getElementById("video-section").style.display = "flex";
             document.getElementById("user-name").innerText = username;
-            loadVideo(); // Carregar o vídeo corretamente ao fazer login
+            loadVideo();
         }
     }
 
@@ -109,16 +110,14 @@
         const lastAccess = localStorage.getItem(lockKey);
         const now = new Date().getTime();
 
-        // Checar tempo para liberar próximo vídeo
-        if (lastAccess && now - lastAccess < 86400000) { // 24 horas
+        if (lastAccess && now - lastAccess < 86400000) { // 24 hours in ms
             document.getElementById("next-video-btn").disabled = true;
-            document.getElementById("message").innerText = "Você deve esperar 24 horas para assistir ao próximo vídeo.";
+            document.getElementById("message").innerText = "You must wait 24 hours before watching the next video.";
         } else {
             document.getElementById("next-video-btn").disabled = false;
             document.getElementById("message").innerText = "";
         }
 
-        // Certificar que o primeiro vídeo seja carregado
         document.getElementById("video-source").src = videos[currentIndex];
         document.getElementById("video-player").load();
     }
@@ -128,29 +127,26 @@
         localStorage.setItem(lockKey, now);
 
         if (currentIndex < videos.length - 1) {
-            currentIndex++; // Avançar para o próximo vídeo
+            currentIndex++;
             loadVideo();
         } else {
-            document.getElementById("message").innerText = "Você assistiu a todos os vídeos disponíveis.";
+            document.getElementById("message").innerText = "You have watched all the available videos.";
         }
 
-        // Bloquear botão após avançar
         document.getElementById("next-video-btn").disabled = true;
     }
 
-    // Auto-login se usuário já está salvo
+    // Auto-login if username is saved
     window.onload = function () {
         const savedUsername = localStorage.getItem("username");
         if (savedUsername) {
             document.getElementById("login-form").style.display = "none";
             document.getElementById("video-section").style.display = "flex";
             document.getElementById("user-name").innerText = savedUsername;
-
-            // Reiniciar o índice para garantir que o primeiro vídeo seja carregado
-            currentIndex = 0;
             loadVideo();
         }
     };
 </script>
+
 </body>
 </html>
