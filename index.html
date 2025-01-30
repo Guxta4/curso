@@ -3,150 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Access Platform</title>
+    <title>Neon Video Platform</title>
     <style>
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: url('dried-leaves-gray-blank-background.jpg') no-repeat center center fixed;
+            padding: 0;
+            background: url('download.png') no-repeat center center fixed;
             background-size: cover;
-            color: white;
+            font-family: Arial, sans-serif;
         }
-
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
+        }
+        .login-form, .video-section {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
             text-align: center;
+            color: white;
         }
-
-        h1 {
-            margin-bottom: 20px;
-        }
-
         input, button {
-            margin: 10px 0;
             padding: 10px;
-            font-size: 16px;
+            margin: 10px 0;
             border: none;
             border-radius: 5px;
         }
-
-        input {
-            width: 200px;
-        }
-
         button {
-            background-color: #39ff14; /* Neon green */
+            background-color: #39ff14;
             color: black;
             cursor: pointer;
+            font-size: 1rem;
         }
-
-        button:hover {
-            background-color: #32e012;
-        }
-
-        .video-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .video-container video {
-            margin: 10px 0;
-            border: 2px solid #39ff14;
-            border-radius: 10px;
-        }
-
-        .message {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #39ff14;
+        button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="login-form" id="loginForm">
+            <h1>Login</h1>
+            <input type="text" id="username" placeholder="Enter your username" required>
+            <button onclick="login()">Login</button>
+        </div>
 
-<div class="container">
-    <div id="login-form">
-        <h1>Login</h1>
-        <input type="text" id="username" placeholder="Enter your username" required>
-        <button onclick="login()">Login</button>
+        <div class="video-section" id="videoSection" style="display: none;">
+            <h1>Welcome, <span id="user"></span></h1>
+            <video id="videoPlayer" width="640" controls style="display: none;"></video>
+            <div id="videoList"></div>
+            <p id="timer" style="color: #39ff14;"></p>
+            <button id="logoutButton" onclick="logout()">Logout</button>
+        </div>
     </div>
 
-    <div id="video-section" class="video-container">
-        <h1>Welcome, <span id="user-name"></span>!</h1>
-        <video id="video-player" controls width="640" height="360">
-    <source id="video-source" src="modulo1.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-        </video>
-        <button id="next-video-btn" onclick="nextVideo()">Watch Next Video</button>
-        <div id="message" class="message"></div>
-    </div>
-</div>
+    <script>
+        const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4", "video7.mp4", "video8.mp4", "video9.mp4", "video10.mp4"];
+        const loginForm = document.getElementById("loginForm");
+        const videoSection = document.getElementById("videoSection");
+        const userElement = document.getElementById("user");
+        const videoPlayer = document.getElementById("videoPlayer");
+        const videoList = document.getElementById("videoList");
+        const timer = document.getElementById("timer");
 
-<script>
-    const videos = [
-    "modulo1.mp4", "modulo2.mp4", "modulo3.mp4", "modulo4.mp4", "modulo5.mp4",
-    "modulo6.mp4", "modulo7.mp4", "modulo8.mp4", "modulo9.mp4", "modulo10.mp4"
-    ];
-    let currentIndex = 0;
-    const lockKey = "videoAccessTime";
+        function initialize() {
+            const savedUser = localStorage.getItem("username");
+            const lastWatched = JSON.parse(localStorage.getItem("lastWatched"));
+            const now = new Date().getTime();
 
-    function login() {
-        const username = document.getElementById("username").value;
-        if (username) {
-            localStorage.setItem("username", username);
-            document.getElementById("login-form").style.display = "none";
-            document.getElementById("video-section").style.display = "flex";
-            document.getElementById("user-name").innerText = username;
-            loadVideo();
-        }
-    }
+            if (savedUser) {
+                loginForm.style.display = "none";
+                videoSection.style.display = "block";
+                userElement.textContent = savedUser;
 
-    function loadVideo() {
-        const lastAccess = localStorage.getItem(lockKey);
-        const now = new Date().getTime();
-
-        if (lastAccess && now - lastAccess < 86400000) { // 24 hours in ms
-            document.getElementById("next-video-btn").disabled = true;
-            document.getElementById("message").innerText = "You must wait 24 hours before watching the next video.";
-        } else {
-            document.getElementById("next-video-btn").disabled = false;
-            document.getElementById("message").innerText = "";
+                if (lastWatched && now - lastWatched.time < 24 * 60 * 60 * 1000) {
+                    updateTimer(lastWatched.time);
+                } else {
+                    renderVideoList();
+                }
+            }
         }
 
-        document.getElementById("video-source").src = videos[currentIndex];
-        document.getElementById("video-player").load();
-    }
-
-    function nextVideo() {
-        const now = new Date().getTime();
-        localStorage.setItem(lockKey, now);
-
-        if (currentIndex < videos.length - 1) {
-            currentIndex++;
-            loadVideo();
-        } else {
-            document.getElementById("message").innerText = "You have watched all the available videos.";
+        function login() {
+            const username = document.getElementById("username").value;
+            if (username) {
+                localStorage.setItem("username", username);
+                initialize();
+            }
         }
 
-        document.getElementById("next-video-btn").disabled = true;
-    }
-
-    // Auto-login if username is saved
-    window.onload = function () {
-        const savedUsername = localStorage.getItem("username");
-        if (savedUsername) {
-            document.getElementById("login-form").style.display = "none";
-            document.getElementById("video-section").style.display = "flex";
-            document.getElementById("user-name").innerText = savedUsername;
-            loadVideo();
+        function logout() {
+            localStorage.clear();
+            location.reload();
         }
-    };
-</script>
 
+        function renderVideoList() {
+            videoList.innerHTML = "";
+            videos.forEach((video, index) => {
+                const button = document.createElement("button");
+                button.textContent = `Watch Video ${index + 1}`;
+                button.onclick = () => watchVideo(video);
+                videoList.appendChild(button);
+            });
+        }
+
+        function watchVideo(video) {
+            const now = new Date().getTime();
+            videoPlayer.src = video;
+            videoPlayer.style.display = "block";
+            videoPlayer.play();
+            localStorage.setItem("lastWatched", JSON.stringify({ video, time: now }));
+            renderCooldown(now);
+        }
+
+        function renderCooldown(startTime) {
+            videoList.innerHTML = "";
+            updateTimer(startTime);
+        }
+
+        function updateTimer(startTime) {
+            const now = new Date().getTime();
+            const diff = 24 * 60 * 60 * 1000 - (now - startTime);
+
+            if (diff > 0) {
+                timer.textContent = `Next video available in ${Math.ceil(diff / (60 * 60 * 1000))} hours.`;
+                setTimeout(() => updateTimer(startTime), 1000 * 60);
+            } else {
+                timer.textContent = "";
+                renderVideoList();
+            }
+        }
+
+        initialize();
+    </script>
 </body>
 </html>
